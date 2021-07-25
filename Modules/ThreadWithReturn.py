@@ -17,7 +17,6 @@ class ThreadWithReturn(Thread):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-
     # Override the default run() method.
     # This is needed because the default run() method only calls the
     # target function. The return value is discarded.

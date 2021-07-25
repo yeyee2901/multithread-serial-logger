@@ -4,9 +4,11 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
+pyqt5 = "*"
 pyserial = "*"
 
 [dev-packages]
+neovim = "*"
 
 [requires]
 python_version = "3.9"
