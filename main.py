@@ -1,49 +1,25 @@
 # DONE:
-# 1. Table of active serial ports added
+# -. Table of active serial ports added
 #       (device name, port, status(?))
-# 2. Check if added port already in table, if not add,
+# -. Check if added port already in table, if not add,
 #    if exist then warn user
+# -. Add input prompt to enter device name ("arduino", "ESP", etc) d
 
-# TO DO:
-# 1. Connect to specified port when port added to main table
-# 2. Remove port from table if disconnected
+# TODO:
 
-
-# Sys modules
 import sys,os
-
-# Project modules
-from Modules.ThreadWithReturn import ThreadWithReturn
-from Modules.SerialParser import SerialParser
-from Modules.Logger import Logger
-from PyQt5.QtWidgets import QDialog, QMainWindow, QApplication, QTableWidget, QWidget, QGridLayout
+from PyQt5.QtWidgets import QDialog, QLineEdit, QMainWindow, QApplication, QTableWidget, QWidget, QGridLayout
 from PyQt5.QtWidgets import QComboBox, QPushButton, QTableWidgetItem, QLabel
 from PyQt5.QtCore import Qt
 
-WINDOW_W = 1000
-WINDOW_H = 700
+from Modules.ThreadWithReturn import ThreadWithReturn
+from Modules.SerialParser import SerialParser
+from Modules.Logger import Logger
 
 THREADS = []
 DEVICES = []
 NUM_OF_ARDUINOS = 5
 BAUDRATE = 9600
-
-def initSystem():
-    for i in range(NUM_OF_ARDUINOS):
-        new_port = f"/dev/ttyACM{i}"
-        new_device = SerialParser(port=new_port, baudrate=BAUDRATE)
-
-        if new_device.isOpen():
-            DEVICES.append( Logger(new_device, f"logfile{1+i}.txt", "w") )
-            THREADS.append( ThreadWithReturn(target=DEVICES[i].logData) )
-
-    for thread,_ in enumerate(THREADS):
-        print(f"Thread {THREADS[thread]} starting")
-        THREADS[thread].start()
-
-    for thread,_ in enumerate(THREADS):
-        print(f"Log data returned: {len(THREADS[thread].join())} characters")
-
 
 class MainWindow(QMainWindow):
 
@@ -51,19 +27,21 @@ class MainWindow(QMainWindow):
 
         # ATTRIBUTES
         self.CONNECTED_PORTS = []
+        self.LOGFILES_LIST = []
+        self.DEVICES_NAME = []
         self.MAIN_TABLE_DATA = {
-            'Device' : [],
+            'Device' : self.DEVICES_NAME,
             'Port' : self.CONNECTED_PORTS,
-            'Status' : []
+            'Logfile' : self.LOGFILES_LIST,
+            'Status' : [],
         }
-        self.TABLE_COLUMNS = 3
-        self.TABLE_ROWS = 0     # This is dynamic
-
+        self.TABLE_COLUMNS = len(self.MAIN_TABLE_DATA.keys())
+        self.TABLE_ROWS = 0
 
         super().__init__(*args, **kwargs)
+
         # Init main window widget 
         self.setWindowTitle("Multi Threaded Serial Port Listener")
-        self.resize(WINDOW_W, WINDOW_H)
 
         # config main widget
         self.MainWidget = QWidget()
@@ -75,15 +53,25 @@ class MainWindow(QMainWindow):
 
         # Init all other UI
         self.initUI()
+        self.adjustSize()
         self.show()
 
-    def initUI(self) -> None:
+    def initUI(self):
 
-        # Input dialog with combo box
+        # Port selection
         self.port_selection = QComboBox()
         self.port_selection.addItems(self.getPorts())
 
-        # Port selection control buttons
+        # Input text
+        self.input_device_name = QLineEdit()
+        self.input_logfile_name = QLineEdit()
+
+        # Labels
+        self.in_device_label = QLabel("Device: ")
+        self.in_logfile_name = QLabel("Logfile: ")
+        
+
+        # control buttons
         self.add_port_btn = QPushButton("Add")
         self.add_port_btn.clicked.connect(self.portAdded)
 
@@ -95,22 +83,32 @@ class MainWindow(QMainWindow):
         self.MAIN_TABLE = QTableWidget()
         self.MAIN_TABLE.setRowCount(self.TABLE_ROWS)
         self.MAIN_TABLE.setColumnCount(self.TABLE_COLUMNS)
+        self.MAIN_TABLE.showNormal()
         self.updateTableData()
 
 
         # Place all widget in main widget
-        self.MainWidgetLayout.addWidget(self.MAIN_TABLE, 0, 0, 1, 3)
-        self.MainWidgetLayout.addWidget(self.port_selection, 1, 0, 1, 2)
-        self.MainWidgetLayout.addWidget(self.add_port_btn, 1, 2, 1, 1)
-        self.MainWidgetLayout.addWidget(self.refresh_port_btn, 1, 3, 1, 1)
+        self.MainWidgetLayout.addWidget(self.MAIN_TABLE, 0, 0, 5, 4)
+        self.MainWidgetLayout.addWidget(self.port_selection, 6, 0, 1, 1)
+        self.MainWidgetLayout.addWidget(self.refresh_port_btn, 6, 1, 1, 1)
+        self.MainWidgetLayout.addWidget(self.add_port_btn, 6, 2, 1, 2)
+        self.MainWidgetLayout.addWidget(self.in_device_label, 7, 0, 1, 1)
+        self.MainWidgetLayout.addWidget(self.input_device_name, 7, 1, 1, 1)
+        self.MainWidgetLayout.addWidget(self.in_logfile_name, 7, 2, 1, 1)
+        self.MainWidgetLayout.addWidget(self.input_logfile_name, 7, 3, 1, 1)
 
     def updateTableData(self): 
         horHeaders = []
-        for col, key in enumerate(sorted(self.MAIN_TABLE_DATA.keys())):
+
+        for col, key in enumerate(self.MAIN_TABLE_DATA.keys()):
             horHeaders.append(key)
+
+            # Add new items with read only
             for row, item in enumerate(self.MAIN_TABLE_DATA[key]):
                 newitem = QTableWidgetItem(item)
+                newitem.setFlags(newitem.flags() & ~Qt.ItemFlag.ItemIsEditable)
                 self.MAIN_TABLE.setItem(row, col, newitem)
+
         self.MAIN_TABLE.setHorizontalHeaderLabels(horHeaders)
 
     def getPorts(self) -> list:
@@ -126,18 +124,31 @@ class MainWindow(QMainWindow):
     def portAdded(self):
         # Update connected port list
         new_connection = self.port_selection.currentText()
+        new_device = self.input_device_name.text()
+        new_logfile = self.input_logfile_name.text()
 
+        # Check if new connection is in already in table
         if new_connection not in self.MAIN_TABLE_DATA["Port"]:
-            self.CONNECTED_PORTS.append(new_connection)
 
-            # Update table content
-            self.TABLE_ROWS += 1
-            self.MAIN_TABLE.setRowCount(self.TABLE_ROWS)
-            self.updateTableData()
+            # Check if logfile & device is specified
+            if (len(new_device) > 0) and (len(new_logfile) > 0):
+                self.CONNECTED_PORTS.append(new_connection)
+                self.DEVICES_NAME.append(new_device)
+                self.LOGFILES_LIST.append(new_logfile)
+                
+                # Update table content
+                self.TABLE_ROWS += 1
+                self.MAIN_TABLE.setRowCount(self.TABLE_ROWS)
+                self.updateTableData()
+                self.adjustSize()
+            else:
+                MainWindow.showDialog("ERROR", "Missing information. Please provide both logfile & device name")
         else:
-            # Dialog box
-            MainWindow.showDialog("WARNING","Cannot assign already existing port.")
-            pass
+            MainWindow.showDialog("ERROR","Cannot assign already existing port.")
+
+        # Clear text
+        self.input_device_name.setText('')
+        self.input_logfile_name.setText('')
 
 
     # Generic Dialog
