@@ -1,31 +1,29 @@
 # DONE:
-# -. Table of active serial ports added
-#       (device name, port, status(?))
-# -. Check if added port already in table, if not add,
-#    if exist then warn user
-# -. Add input prompt to enter device name ("arduino", "ESP", etc) d
+# - Table of active serial ports added
+#      (device name, port, status(?))
+# - Check if added port already in table, if not add,
+#       if exist then warn user
+# - Add input prompt to enter device name ("arduino", "ESP", etc) d
+# - Integrate backend with frontend GUI calls
 
 # TODO:
+# - Check threads during runtime update (during QTimer update)
+#       if still active continue, else remove from HANDLERS list & MAIN_TABLE
 
 import sys,os
 from PyQt5.QtWidgets import QDialog, QLineEdit, QMainWindow, QApplication, QTableWidget, QWidget, QGridLayout
 from PyQt5.QtWidgets import QComboBox, QPushButton, QTableWidgetItem, QLabel
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QTimer
 
-from Modules.ThreadWithReturn import ThreadWithReturn
-from Modules.SerialParser import SerialParser
-from Modules.Logger import Logger
+from Modules.BackendHandler import Handler
 
-THREADS = []
-DEVICES = []
-NUM_OF_ARDUINOS = 5
-BAUDRATE = 9600
 
 class MainWindow(QMainWindow):
 
     def __init__(self, *args, **kwargs):
 
         # ATTRIBUTES
+        self.HANDLERS = {}
         self.CONNECTED_PORTS = []
         self.LOGFILES_LIST = []
         self.DEVICES_NAME = []
@@ -33,7 +31,6 @@ class MainWindow(QMainWindow):
             'Device' : self.DEVICES_NAME,
             'Port' : self.CONNECTED_PORTS,
             'Logfile' : self.LOGFILES_LIST,
-            'Status' : [],
         }
         self.TABLE_COLUMNS = len(self.MAIN_TABLE_DATA.keys())
         self.TABLE_ROWS = 0
@@ -105,6 +102,7 @@ class MainWindow(QMainWindow):
 
             # Add new items with read only
             for row, item in enumerate(self.MAIN_TABLE_DATA[key]):
+
                 newitem = QTableWidgetItem(item)
                 newitem.setFlags(newitem.flags() & ~Qt.ItemFlag.ItemIsEditable)
                 self.MAIN_TABLE.setItem(row, col, newitem)
@@ -132,15 +130,26 @@ class MainWindow(QMainWindow):
 
             # Check if logfile & device is specified
             if (len(new_device) > 0) and (len(new_logfile) > 0):
-                self.CONNECTED_PORTS.append(new_connection)
-                self.DEVICES_NAME.append(new_device)
-                self.LOGFILES_LIST.append(new_logfile)
                 
-                # Update table content
-                self.TABLE_ROWS += 1
-                self.MAIN_TABLE.setRowCount(self.TABLE_ROWS)
-                self.updateTableData()
-                self.adjustSize()
+                # Try to connect
+                new_handler = Handler(new_connection, new_logfile)
+
+                if new_handler.isActive():
+                    self.DEVICES_NAME.append(new_device)
+                    self.CONNECTED_PORTS.append(new_connection)
+                    self.LOGFILES_LIST.append(new_logfile)
+                    self.HANDLERS[new_connection] = new_handler
+
+                    # Start thread
+                    self.HANDLERS[new_connection].start()
+                    
+                    # Update table content
+                    self.TABLE_ROWS += 1
+                    self.MAIN_TABLE.setRowCount(self.TABLE_ROWS)
+                    self.updateTableData()
+                    self.adjustSize()
+                else:
+                    MainWindow.showDialog("ERROR", f"Cannot connect to {new_connection}")
             else:
                 MainWindow.showDialog("ERROR", "Missing information. Please provide both logfile & device name")
         else:

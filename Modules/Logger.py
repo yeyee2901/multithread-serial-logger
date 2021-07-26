@@ -9,11 +9,10 @@ class Logger:
         self._logfile = logfile
         # ----------------------------------------------
 
-        self.target_file = open(logfile, mode)
+        self.target_file = open(f"./logfiles/{logfile}", mode)
         self.serial = active_serial
 
     def logData(self) -> str:
-        self.printLoggingMessage("","Getting data...")
         data = self.serial.getNewData()
 
         if self.target_file.writable() and self.serial.isOpen():
