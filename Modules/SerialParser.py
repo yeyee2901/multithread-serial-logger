@@ -1,9 +1,10 @@
 from serial import Serial
 from serial.serialutil import SerialException
+import time
 
 class SerialParser(Serial):
 
-    # counter for number of serial device connected
+    # STATICS
     ID_COUNT = 0
     DEFAULT_DEVICE = "Arduino"
 
@@ -24,8 +25,14 @@ class SerialParser(Serial):
         # Tell arduino which ID it got allocated
         if self.isOpen():
             self.printParserMessage("Found new device. Sending message to device to confirm ID")
-            to_write = f"ID-{ self.getID() }"
+
+            # This is because on connection, Arduino will RESTART!
+            # We have to wait before sending any data
+            time.sleep(2)
+            to_write = f"ID-{ self.getID() }\n"
             self.write(to_write.encode("utf-8"))
+
+            self.printParserMessage(f"Device replied with: {self.getNewData()}")
         else:
             self.error_n_die()
 
@@ -48,5 +55,13 @@ class SerialParser(Serial):
         self.printParserMessage("Cannot access port. Either arduino is disconnected or port error")
         self.close()
 
-    def printParserMessage(self,msg:str):
+    def printParserMessage(self, msg:str):
         print(f"[SERIAL] {self.port}: {msg}")
+
+if __name__ == "__main__":
+    logger = SerialParser(port="/dev/ttyACM0", baudrate=9600)
+    
+    while True:
+        print(f"{logger.getID()} sent: {logger.getNewData()}")
+
+    print("Conection Lost")

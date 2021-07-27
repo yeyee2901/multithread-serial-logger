@@ -1,3 +1,4 @@
+from serial.serialutil import SerialException
 from . import SerialParser as ser
 
 class Logger:
@@ -6,23 +7,25 @@ class Logger:
                  logfile: str, mode: str):
 
         # PRIVATES -------------------------------------
-        self._logfile = logfile
+        self._logfile = f"./logfiles/{logfile}"
         # ----------------------------------------------
 
-        self.target_file = open(f"./logfiles/{logfile}", mode)
         self.serial = active_serial
+        self.is_active = True
 
+    # Continuously log data
     def logData(self) -> str:
-        data = self.serial.getNewData()
+        data = ""
+        while self.is_active:
+            try:
+                with open(self._logfile, "a") as logfile:
+                    data = self.serial.getNewData()
+                    logfile.write(data)
 
-        if self.target_file.writable() and self.serial.isOpen():
-            self.printLoggingMessage(self._logfile, data)
-            self.target_file.write(data)
-
-        # Let's not forget to close the file
-        else:
-            self.printLoggingMessage(self._logfile, "Closing logfile")
-            self.target_file.close()
+            # Handle if device disconnected
+            except SerialException:
+                self.is_active = False
+                print(f"[THREAD] Device disconnected, ending thread associated with the logger...")
 
         return data
 

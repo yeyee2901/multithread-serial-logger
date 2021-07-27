@@ -4,7 +4,6 @@ from threading import Thread
 
 # Automatically determine which Python version is running
 python_version, *_ = sys.version_info
-
 if python_version >= 3:
     _thread_target, _thread_args, _thread_kwargs = ('_target', '_args', '_kwargs')
 else:

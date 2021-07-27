@@ -1,6 +1,6 @@
+from . import ThreadWithReturn
 from . import SerialParser
 from . import Logger
-from . import ThreadWithReturn
 
 class Handler(object):
     def __init__(self, new_port: str, logfile: str):
@@ -11,5 +11,9 @@ class Handler(object):
     def isActive(self):
         return self.logger.serial.isOpen()
 
-    def start(self):
+    def handleData(self):
         self.thread.start()
+
+    def join(self):
+        self.connection.close()
+        self.thread.join()

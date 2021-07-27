@@ -1,20 +1,16 @@
-# DONE:
+# DONEEEE:
 # - Table of active serial ports added
-#      (device name, port, status(?))
-# - Check if added port already in table, if not add,
+#      (device name, port)
+# - Check if added port already in table, if not then add,
 #       if exist then warn user
-# - Add input prompt to enter device name ("arduino", "ESP", etc) d
+# - Add input prompt to enter device name ("arduino", "ESP", etc)
 # - Integrate backend with frontend GUI calls
-
-# TODO:
-# - Check threads during runtime update (during QTimer update)
-#       if still active continue, else remove from HANDLERS list & MAIN_TABLE
-
+# - Multiple device is able to log data concurrently using threads
+# - If device disconnected, then remove from the table
 import sys,os
 from PyQt5.QtWidgets import QDialog, QLineEdit, QMainWindow, QApplication, QTableWidget, QWidget, QGridLayout
 from PyQt5.QtWidgets import QComboBox, QPushButton, QTableWidgetItem, QLabel
 from PyQt5.QtCore import Qt, QTimer
-
 from Modules.BackendHandler import Handler
 
 
@@ -24,9 +20,9 @@ class MainWindow(QMainWindow):
 
         # ATTRIBUTES
         self.HANDLERS = {}
+        self.DEVICES_NAME = []
         self.CONNECTED_PORTS = []
         self.LOGFILES_LIST = []
-        self.DEVICES_NAME = []
         self.MAIN_TABLE_DATA = {
             'Device' : self.DEVICES_NAME,
             'Port' : self.CONNECTED_PORTS,
@@ -52,6 +48,8 @@ class MainWindow(QMainWindow):
         self.initUI()
         self.adjustSize()
         self.show()
+
+        self.initTimer()
 
     def initUI(self):
 
@@ -83,6 +81,10 @@ class MainWindow(QMainWindow):
         self.MAIN_TABLE.showNormal()
         self.updateTableData()
 
+    def initTimer(self):
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.updateAll)
+        self.timer.start(2)
 
         # Place all widget in main widget
         self.MainWidgetLayout.addWidget(self.MAIN_TABLE, 0, 0, 5, 4)
@@ -95,6 +97,7 @@ class MainWindow(QMainWindow):
         self.MainWidgetLayout.addWidget(self.input_logfile_name, 7, 3, 1, 1)
 
     def updateTableData(self): 
+        self.MAIN_TABLE.setRowCount(self.TABLE_ROWS)
         horHeaders = []
 
         for col, key in enumerate(self.MAIN_TABLE_DATA.keys()):
@@ -139,13 +142,10 @@ class MainWindow(QMainWindow):
                     self.CONNECTED_PORTS.append(new_connection)
                     self.LOGFILES_LIST.append(new_logfile)
                     self.HANDLERS[new_connection] = new_handler
+                    self.HANDLERS[new_connection].handleData()
 
-                    # Start thread
-                    self.HANDLERS[new_connection].start()
-                    
                     # Update table content
                     self.TABLE_ROWS += 1
-                    self.MAIN_TABLE.setRowCount(self.TABLE_ROWS)
                     self.updateTableData()
                     self.adjustSize()
                 else:
@@ -159,6 +159,36 @@ class MainWindow(QMainWindow):
         self.input_device_name.setText('')
         self.input_logfile_name.setText('')
 
+    def updateAll(self):
+        inactive = []
+        if len(list(self.HANDLERS.keys())) > 0:
+            for key in list(self.HANDLERS.keys()):
+
+                # remove handler if inactive
+                if not self.HANDLERS[key].logger.is_active:
+                    self.HANDLERS.pop(key, "")
+                    inactive.append(key)
+
+        # Remove corresponding table element
+        for port in inactive:
+            print(f"[LOGGER] {port} disconnected")
+            index = self.CONNECTED_PORTS.index(port)
+            self.CONNECTED_PORTS.pop(index)
+            self.LOGFILES_LIST.pop(index)
+            self.DEVICES_NAME.pop(index)
+
+            self.TABLE_ROWS -= 1
+            self.updateTableData()
+
+
+    def terminateAll(self):
+        if len(list(self.HANDLERS.keys())) > 0:
+            for key in list(self.HANDLERS.keys()):
+                print(f"{key}: TERMINATING...")
+                self.HANDLERS[key].join()
+
+            self.HANDLERS.clear()
+            
 
     # Generic Dialog
     @staticmethod
@@ -178,7 +208,7 @@ class MainWindow(QMainWindow):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-
     main = MainWindow()
-
     exit(app.exec_())
+    main.terminateAll()
+    exit()
