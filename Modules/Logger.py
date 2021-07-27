@@ -23,7 +23,7 @@ class Logger:
                     logfile.write(data)
 
             # Handle if device disconnected
-            except SerialException:
+            except (SerialException, KeyboardInterrupt):
                 self.is_active = False
                 print(f"[THREAD] Device disconnected, ending thread associated with the logger...")
 
