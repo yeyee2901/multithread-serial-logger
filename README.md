@@ -5,7 +5,7 @@ You won't notice it if the baudrate is set high enough, but imagine working with
 only has 16MHz clock. The latency would be a problem if we log multiple Arduinos. The main GUI will be forced to wait for
 the logger and cannot process incoming events from the user correctly.
 
-nbsp;  
+&nbsp;  
   
 Multiprocessing will execute process concurrently, exactly at the same rate, while threads however, is executed one by one,
 by switching between threads really fast, creating the 'illusion' of concurrent proccess. Why not use Python multiprocessing module?
