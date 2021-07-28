@@ -36,3 +36,15 @@ python main.py
 
 ## Planned improvement
 - Adjustable baudrate
+
+## Tested Platforms
+1. Raspberry Pi 4 Model B
+2. Pop-OS 21.04
+&nbsp;  
+
+## Screenshot
+Simple test run using Arduino UNO R3 & NodeMCU v2. Both of the programs are identically the same. Just sending a 
+simple string.
+![image](https://user-images.githubusercontent.com/55247343/127276557-de432ac8-ca9d-41ce-8881-cacc9a2cee6b.png)
+![image](https://user-images.githubusercontent.com/55247343/127276618-1e1ecb24-f85f-4a6e-a617-fa7842f529cd.png)
+![image](https://user-images.githubusercontent.com/55247343/127276770-f6452c28-8c8a-4f1f-9ebd-0d920ebb0765.png)
