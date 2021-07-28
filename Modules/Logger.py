@@ -4,7 +4,7 @@ from . import SerialParser as ser
 class Logger:
 
     def __init__(self, active_serial: ser.SerialParser,
-                 logfile: str, mode: str):
+                 logfile: str):
 
         # PRIVATES -------------------------------------
         self._logfile = f"./logfiles/{logfile}"

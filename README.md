@@ -27,3 +27,12 @@ pipenv install
 pipenv shell
 python main.py
 ```
+
+## Current State of the Project (as of July 2021)
+- The app is able to log multiple device concurrently
+- Disconnecting a device will not affect the logging thread of other device
+- App can exit without error (clean exit) -> disconnect all device then close the app.
+- Make sure to set the baudrate into 9600.
+
+## Planned improvement
+- Adjustable baudrate

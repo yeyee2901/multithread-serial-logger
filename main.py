@@ -7,16 +7,23 @@
 # - Integrate backend with frontend GUI calls
 # - Multiple device is able to log data concurrently using threads
 # - If device disconnected, then remove from the table
-# - Test case #1 succeeded.
+# - All test case succeeded.
+# - Cleanup done
+# - Added baudrate selection functionality
 
 # TODO:
-# - Testing all test cases.
+# - Write test case report (screenshot & terminal output)
+
 import sys,os
 from PyQt5.QtWidgets import QDialog, QLineEdit, QMainWindow, QApplication, QTableWidget, QWidget, QGridLayout
 from PyQt5.QtWidgets import QComboBox, QPushButton, QTableWidgetItem, QLabel
 from PyQt5.QtCore import Qt, QTimer
 from Modules.BackendHandler import Handler
 
+# For comparison, Arduino UNO max is about 115200 ~ 230400
+# Some device with higher clocks are able to reach 460800
+BAUDRATES = ['4800', '9600', '19200', '28800', '57600',
+             '115200', '230400', '460800', '576000']
 
 class MainWindow(QMainWindow):
 
@@ -61,6 +68,10 @@ class MainWindow(QMainWindow):
         self.port_selection = QComboBox()
         self.port_selection.addItems(self.getPorts())
 
+        # baudrate selection
+        self.baud_selection = QComboBox()
+        self.baud_selection.addItems(BAUDRATES)
+
         # Input text
         self.input_device_name = QLineEdit()
         self.input_logfile_name = QLineEdit()
@@ -68,6 +79,7 @@ class MainWindow(QMainWindow):
         # Labels
         self.in_device_label = QLabel("Device: ")
         self.in_logfile_name = QLabel("Logfile: ")
+        self.in_baud_label = QLabel("Baudrate: ")
         
 
         # control buttons
@@ -99,6 +111,8 @@ class MainWindow(QMainWindow):
         self.MainWidgetLayout.addWidget(self.input_device_name, 7, 1, 1, 1)
         self.MainWidgetLayout.addWidget(self.in_logfile_name, 7, 2, 1, 1)
         self.MainWidgetLayout.addWidget(self.input_logfile_name, 7, 3, 1, 1)
+        self.MainWidgetLayout.addWidget(self.in_baud_label, 8, 0, 1, 1)
+        self.MainWidgetLayout.addWidget(self.baud_selection, 8, 1, 1, 1)
 
     def updateTableData(self): 
         self.MAIN_TABLE.setRowCount(self.TABLE_ROWS)
@@ -131,6 +145,7 @@ class MainWindow(QMainWindow):
         new_connection = self.port_selection.currentText()
         new_device = self.input_device_name.text()
         new_logfile = self.input_logfile_name.text()
+        new_baud = int(self.baud_selection.currentText())
 
         # Check if new connection is already in table
         if new_connection not in self.MAIN_TABLE_DATA["Port"]:
@@ -139,7 +154,7 @@ class MainWindow(QMainWindow):
             if (len(new_device) > 0) and (len(new_logfile) > 0):
                 
                 # Try to connect
-                new_handler = Handler(new_connection, new_logfile)
+                new_handler = Handler(new_connection, new_logfile, new_baud)
 
                 if new_handler.isActive():
                     self.DEVICES_NAME.append(new_device)

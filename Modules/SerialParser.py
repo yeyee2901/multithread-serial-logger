@@ -31,8 +31,8 @@ class SerialParser(Serial):
             time.sleep(2)
             to_write = f"ID-{ self.getID() }\n"
             self.write(to_write.encode("utf-8"))
-
             self.printParserMessage(f"Device replied with: {self.getNewData()}")
+
         else:
             self.error_n_die()
 
