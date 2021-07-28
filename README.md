@@ -47,7 +47,18 @@ python main.py
 Closing the app while there's still active device logging, will not kill the process.
 - Do not forget to set the baudrate, as of now, mismatch of the baudrate can lead to undesired
 behaviour. For safety reasons, I always set all of my device baudrates to be the same.
-
+- In this case, my particular app is designed to run on Raspberry, or *nix like systems,
+  as they have a port directory structure -> `/dev/tty`.  
+  For Windows, I heard the ports have a suffix of `COM`, if any of you that has
+  Windows machine can confirm this, I would like to request a workaround this particular method.
+  Especially the search pattern. I don't have a windows machine available atm.
+```python
+   # @ class MainWindow
+   def getPorts(self) -> list:
+       device_list = os.listdir("/dev/")
+       isTTY = [f"/dev/{device}" for device in device_list if ("tty" in device)]
+       return isTTY
+```
 ## Tested Platforms
 1. Raspberry Pi 4 Model B
 2. Pop-OS 21.04
