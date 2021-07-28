@@ -6,7 +6,7 @@ class SerialParser(Serial):
 
     # STATICS
     ID_COUNT = 0
-    DEFAULT_DEVICE = "Arduino"
+    DEFAULT_DEVICE_NAME = "Device"
 
     def __init__(self, *args, **kwargs):
 
@@ -19,7 +19,7 @@ class SerialParser(Serial):
         try:
             super().__init__(*args, **kwargs)
         except SerialException:
-            print(f"[ERROR] Cannot initialize serial port: {self.port}")
+            print(f"[ERROR] Cannot initialize serial port {self.port}")
 
         # on success open,
         # Tell arduino which ID it got allocated
@@ -40,7 +40,7 @@ class SerialParser(Serial):
         data = ''
         if self.isOpen():
             data = self.readline().decode("utf-8")
-            data = f"{SerialParser.DEFAULT_DEVICE}#{self._ID},{data}"
+            data = f"{SerialParser.DEFAULT_DEVICE_NAME}#{self._ID},{data}"
         else:
             self.error_n_die()
 
@@ -57,11 +57,3 @@ class SerialParser(Serial):
 
     def printParserMessage(self, msg:str):
         print(f"[SERIAL] {self.port}: {msg}")
-
-if __name__ == "__main__":
-    logger = SerialParser(port="/dev/ttyACM0", baudrate=9600)
-    
-    while True:
-        print(f"{logger.getID()} sent: {logger.getNewData()}")
-
-    print("Conection Lost")

@@ -1,0 +1,22 @@
+1. [2/2] Single device connected --> file: test-case-1.txt
+    criteria:
+    - Successfully run logger on different thread (than the main GUI)
+    - Table updated with the new device
+
+2. [3/3] Multiple device connected --> file: test-case-2.txt
+    criteria:
+    - All logger run on different threads [PASS]
+    - Table updated with the new device [PASS]
+    - Able to log data concurrently [PASS]
+
+3. [3/3] Single device disconnected --> file: test-case-3.txt
+    criteria:
+    - Thread associated with the logger ended [PASS] -> no thread error
+    - Table updated (remove associated device from table) [PASS] -> correct data removal
+    - Single device disconnected does not disturb other logger threads [PASS]
+
+4. [3/3] Multiple device disconnected --> file: test-case-4.txt
+    criteria:
+    - Thread associated with each logger ended [PASS] -> no thread error
+    - Table updated (remove associated device from table) [PASS] -> table clear confirmed
+    - Any device disconnected does not disturb other logger threads [PASS] -> other threads still run perfectly fine

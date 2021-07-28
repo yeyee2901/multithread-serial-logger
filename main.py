@@ -7,6 +7,10 @@
 # - Integrate backend with frontend GUI calls
 # - Multiple device is able to log data concurrently using threads
 # - If device disconnected, then remove from the table
+# - Test case #1 succeeded.
+
+# TODO:
+# - Testing all test cases.
 import sys,os
 from PyQt5.QtWidgets import QDialog, QLineEdit, QMainWindow, QApplication, QTableWidget, QWidget, QGridLayout
 from PyQt5.QtWidgets import QComboBox, QPushButton, QTableWidgetItem, QLabel
@@ -128,10 +132,10 @@ class MainWindow(QMainWindow):
         new_device = self.input_device_name.text()
         new_logfile = self.input_logfile_name.text()
 
-        # Check if new connection is in already in table
+        # Check if new connection is already in table
         if new_connection not in self.MAIN_TABLE_DATA["Port"]:
 
-            # Check if logfile & device is specified
+            # Check if logfile & device nickname is specified
             if (len(new_device) > 0) and (len(new_logfile) > 0):
                 
                 # Try to connect
@@ -161,9 +165,10 @@ class MainWindow(QMainWindow):
 
     def updateAll(self):
         inactive = []
-        if len(list(self.HANDLERS.keys())) > 0:
-            for key in list(self.HANDLERS.keys()):
+        handler_keys = list(self.HANDLERS.keys())
 
+        if len(handler_keys) > 0:
+            for key in handler_keys:
                 # remove handler if inactive
                 if not self.HANDLERS[key].logger.is_active:
                     self.HANDLERS.pop(key, "")
@@ -181,18 +186,9 @@ class MainWindow(QMainWindow):
             self.updateTableData()
 
 
-    def terminateAll(self):
-        if len(list(self.HANDLERS.keys())) > 0:
-            for key in list(self.HANDLERS.keys()):
-                print(f"{key}: TERMINATING...")
-                self.HANDLERS[key].join()
-
-            self.HANDLERS.clear()
-            
-
     # Generic Dialog
     @staticmethod
-    def showDialog(dialog_type, msg):
+    def showDialog(dialog_title:str, msg:str):
         d = QDialog()
         layout = QGridLayout()
         d.setLayout(layout)
@@ -200,7 +196,7 @@ class MainWindow(QMainWindow):
         warn_msg = QLabel(msg)
         layout.addWidget(warn_msg,0,0)
 
-        d.setWindowTitle(dialog_type)
+        d.setWindowTitle(dialog_title)
         d.exec_()
 
 
@@ -210,5 +206,3 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     main = MainWindow()
     exit(app.exec_())
-    main.terminateAll()
-    exit()
