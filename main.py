@@ -10,6 +10,8 @@
 # - All test case succeeded.
 # - Cleanup done
 # - Added baudrate selection functionality
+# - Workaround getPorts() method done. Now this program works both for POSIX
+#   compliants and windows based system
 
 # TODO:
 # - Write test case report (screenshot & terminal output)
@@ -19,6 +21,20 @@ from PyQt5.QtWidgets import QDialog, QLineEdit, QMainWindow, QApplication, QTabl
 from PyQt5.QtWidgets import QComboBox, QPushButton, QTableWidgetItem, QLabel
 from PyQt5.QtCore import Qt, QTimer
 from Modules.BackendHandler import Handler
+
+import os
+
+# from WindowsNT
+if os.name == 'nt':
+    from serial.tools.list_ports_windows import comports
+
+# Mac & Linux are POSIX compliant (UNIX like systems)
+elif os.name == 'posix':
+    from serial.tools.list_ports_posix import comports
+
+else:
+    raise ImportError("OS Platform not properly detected")
+
 
 # For comparison, Arduino UNO max is about 115200 ~ 230400
 # Some device with higher clocks are able to reach 460800
@@ -131,14 +147,22 @@ class MainWindow(QMainWindow):
         self.MAIN_TABLE.setHorizontalHeaderLabels(horHeaders)
 
     def getPorts(self) -> list:
-        device_list = os.listdir("/dev/")
-        isTTY = [f"/dev/{device}" for device in device_list if ("tty" in device)]
-        return isTTY
+        serial_objects = comports()
+        total = len(serial_objects)
 
+        active_ports = [serial_objects[idx].device for idx in range(total)]
+        return active_ports
 
     # EVENT HANDLERS
     def updatePorts(self):
-        self.port_selection.addItems(self.getPorts())
+        connected_ports = self.getPorts()
+        current_ports = [self.port_selection.itemText(i) for i in range(self.port_selection.count())]
+        new_port = []
+        for port in connected_ports:
+            if port not in current_ports:
+                new_port.append(port)
+
+        self.port_selection.addItems(new_port)
 
     def portAdded(self):
         # Update connected port list
@@ -213,8 +237,6 @@ class MainWindow(QMainWindow):
 
         d.setWindowTitle(dialog_title)
         d.exec_()
-
-
 
 
 if __name__ == "__main__":
