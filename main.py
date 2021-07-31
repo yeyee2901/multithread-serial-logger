@@ -18,7 +18,7 @@
 
 import sys,os
 
-from PyQt5.QtWidgets import QDialog, QLineEdit, QMainWindow, 
+from PyQt5.QtWidgets import QDialog, QLineEdit, QMainWindow
 from PyQt5.QtWidgets import QApplication, QTableWidget, QWidget, QGridLayout
 from PyQt5.QtWidgets import QComboBox, QPushButton, QTableWidgetItem, QLabel
 from PyQt5.QtCore import Qt, QTimer

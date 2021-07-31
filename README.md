@@ -53,6 +53,8 @@ For safety reasons, I always set all of my device baudrates to be the same.
 ## Tested Platforms
 1. Raspberry Pi 4 Model B
 2. Pop-OS 21.04
+3. MacOS
+4. Windows 10
 &nbsp;  
 
 ## Screenshot

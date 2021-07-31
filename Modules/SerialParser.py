@@ -43,7 +43,6 @@ class SerialParser(Serial):
             data = f"{SerialParser.DEFAULT_DEVICE_NAME}#{self._ID},{data}"
         else:
             self.error_n_die()
-
         return data
 
     def getID(self) -> int:

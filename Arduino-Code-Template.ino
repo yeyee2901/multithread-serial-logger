@@ -1,5 +1,5 @@
 const unsigned int BAUDRATE = 9600;
-const String MESSAGE = "Helloooooo";
+const String MESSAGE = "Hello from the Arduino UNO";
 
 void setup()
 {
