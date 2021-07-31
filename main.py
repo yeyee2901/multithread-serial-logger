@@ -17,12 +17,12 @@
 # - Write test case report (screenshot & terminal output)
 
 import sys,os
-from PyQt5.QtWidgets import QDialog, QLineEdit, QMainWindow, QApplication, QTableWidget, QWidget, QGridLayout
+
+from PyQt5.QtWidgets import QDialog, QLineEdit, QMainWindow, 
+from PyQt5.QtWidgets import QApplication, QTableWidget, QWidget, QGridLayout
 from PyQt5.QtWidgets import QComboBox, QPushButton, QTableWidgetItem, QLabel
 from PyQt5.QtCore import Qt, QTimer
 from Modules.BackendHandler import Handler
-
-import os
 
 # from WindowsNT
 if os.name == 'nt':
@@ -51,8 +51,8 @@ class MainWindow(QMainWindow):
         self.CONNECTED_PORTS = []
         self.LOGFILES_LIST = []
         self.MAIN_TABLE_DATA = {
-            'Device' : self.DEVICES_NAME,
-            'Port' : self.CONNECTED_PORTS,
+            'Device'  : self.DEVICES_NAME,
+            'Port'    : self.CONNECTED_PORTS,
             'Logfile' : self.LOGFILES_LIST,
         }
         self.TABLE_COLUMNS = len(self.MAIN_TABLE_DATA.keys())
@@ -99,12 +99,11 @@ class MainWindow(QMainWindow):
         
 
         # control buttons
-        self.add_port_btn = QPushButton("Add")
-        self.add_port_btn.clicked.connect(self.portAdded)
-
         self.refresh_port_btn = QPushButton("Refresh Ports")
         self.refresh_port_btn.clicked.connect(self.updatePorts)
         
+        self.add_port_btn = QPushButton("Add")
+        self.add_port_btn.clicked.connect(self.portAdded)
 
         # Table view widget
         self.MAIN_TABLE = QTableWidget()
